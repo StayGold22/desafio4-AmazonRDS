@@ -1,0 +1,213 @@
+root@aws-sandbox:~# curl -s http://localhost:4566/_localstack/health | jq .
+
+{
+  "services": {
+    "acm": "available",
+    "apigateway": "available",
+    "cloudformation": "available",
+    "cloudwatch": "available",
+    "config": "available",
+    "dynamodb": "available",
+    "dynamodbstreams": "available",
+    "ec2": "available",
+    "es": "available",
+    "events": "available",
+    "firehose": "available",
+    "iam": "available",
+    "kinesis": "available",
+    "kms": "available",
+    "lambda": "available",
+    "logs": "available",
+    "opensearch": "available",
+    "redshift": "available",
+    "resource-groups": "available",
+    "resourcegroupstaggingapi": "available",
+    "route53": "available",
+    "route53resolver": "available",
+    "s3": "running",
+    "s3control": "available",
+    "scheduler": "available",
+    "secretsmanager": "available",
+    "ses": "available",
+    "sns": "available",
+    "sqs": "available",
+    "ssm": "available",
+    "stepfunctions": "available",
+    "sts": "available",
+    "support": "available",
+    "swf": "available",
+    "transcribe": "available"
+  },
+  "edition": "community",
+  "version": "4.8.2.dev30"
+}
+
+root@aws-sandbox:~# aws --endpoint-url=http://localhost:4566 ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications "ResourceType=vpc,Tags=[{Key=Name,Value=vpc-desafio4}]"
+
+You must specify a region. You can also configure your region by running "aws configure".
+root@aws-sandbox:~# aws configure
+AWS Access Key ID [None]: test
+AWS Secret Access Key [None]: test
+Default region name [None]: us-west-2
+Default output format [None]: json
+root@aws-sandbox:~# aws --endpoint-url=http://localhost:4566 ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications "ResourceType=vpc,Tags=[{Key=Name,Value=vpc-desafio4}]"
+{
+    "Vpc": {
+        "OwnerId": "000000000000",
+        "InstanceTenancy": "default",
+        "Ipv6CidrBlockAssociationSet": [],
+        "CidrBlockAssociationSet": [
+            {
+                "AssociationId": "vpc-cidr-assoc-8b0dedb7f64319572",
+                "CidrBlock": "10.0.0.0/16",
+                "CidrBlockState": {
+                    "State": "associated"
+                }
+            }
+        ],
+        "IsDefault": false,
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "vpc-desafio4"
+            }
+        ],
+        "VpcId": "vpc-e026a5aa986b30b7a",
+        "State": "available",
+        "CidrBlock": "10.0.0.0/16",
+        "DhcpOptionsId": "default"
+    }
+}
+
+
+root@aws-sandbox:~# aws --endpoint-url=http://localhost:4566 ec2 create-subnet --vpc-id vpc-e026a5aa986b30b7a --cidr-block 10.0.0.0/24 --availability-zone us-west-2a --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=public-subnet-desafio4}]" 
+{
+    "Subnet": {
+        "AvailabilityZoneId": "usw2-az2",
+        "OwnerId": "000000000000",
+        "AssignIpv6AddressOnCreation": false,
+        "Ipv6CidrBlockAssociationSet": [],
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "public-subnet-desafio4"
+            }
+        ],
+        "SubnetArn": "arn:aws:ec2:us-west-2:000000000000:subnet/subnet-b9f20af0580909f9b",
+        "Ipv6Native": false,
+        "SubnetId": "subnet-b9f20af0580909f9b",
+        "State": "available",
+        "VpcId": "vpc-e026a5aa986b30b7a",
+        "CidrBlock": "10.0.0.0/24",
+        "AvailableIpAddressCount": 251,
+        "AvailabilityZone": "us-west-2a",
+        "DefaultForAz": false,
+        "MapPublicIpOnLaunch": false
+    }
+}
+root@aws-sandbox:~# aws --endpoint-url=http://localhost:4566 ec2 create-internet-gateway --tag-specifications "ResourceType=internet-gateway,Tags=[{Key=Name,Value=igw-desafio4}]"
+
+{
+    "InternetGateway": {
+        "Attachments": [],
+        "InternetGatewayId": "igw-0d08ea03e92d7c88d",
+        "OwnerId": "000000000000",
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "igw-desafio4"
+            }
+        ]
+    }
+}
+
+root@aws-sandbox:~# aws --endpoint-url=http://localhost:4566 ec2 attach-internet-gateway --internet-gateway-id igw-0d08ea03e92d7c88d --vpc-id vpc-e026a5aa986b30b7a
+
+root@aws-sandbox:~# aws --endpoint-url=http://localhost:4566 ec2 create-route-table --vpc-id vpc-e026a5aa986b30b7a --tag-specifications "ResourceType=route-table,Tags=[{Key=Name,Value=rt-public-desafio4}]"
+
+{
+    "RouteTable": {
+        "Associations": [],
+        "RouteTableId": "rtb-5ebfc77e4206aa31a",
+        "Routes": [
+            {
+                "DestinationCidrBlock": "10.0.0.0/16",
+                "GatewayId": "local",
+                "State": "active"
+            }
+        ],
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "rt-public-desafio4"
+            }
+        ],
+        "VpcId": "vpc-e026a5aa986b30b7a",
+        "OwnerId": "000000000000"
+    }
+}
+
+root@aws-sandbox:~# aws --endpoint-url=http://localhost:4566 ec2 associate-route-table --route-table-id rtb-5ebfc77e4206aa31a --subnet-id subnet-b9f20af0580909f9b
+
+{
+    "AssociationId": "rtbassoc-a4883c20fee8fc05c"
+}
+root@aws-sandbox:~# aws --endpoint-url=http://localhost:4566 ec2 create-security-group --group-name sg-desafio4 --description "Security Group para MariaDB" --vpc-id vpc-e026a5aa986b30b7a
+
+{
+    "GroupId": "sg-9d377ff941c24e2cb",
+    "SecurityGroupArn": "arn:aws:ec2:us-west-2:000000000000:security-group/sg-9d377ff941c24e2cb"
+}
+root@aws-sandbox:~# aws --endpoint-url=http://localhost:4566 ec2 authorize-security-group-ingress --group-id sg-9d377ff941c24e2cb --protocol tcp --port 3306 --cidr 0.0.0.0/0
+
+{
+    "Return": true,
+    "SecurityGroupRules": [
+        {
+            "SecurityGroupRuleId": "sgr-fcfa4cf2ae10c76d5",
+            "GroupId": "sg-9d377ff941c24e2cb",
+            "IsEgress": false,
+            "IpProtocol": "tcp",
+            "FromPort": 3306,
+            "ToPort": 3306,
+            "CidrIpv4": "0.0.0.0/0",
+            "Tags": []
+        }
+    ]
+}
+
+root@aws-sandbox:~# aws --endpoint-url=http://localhost:4566 ec2 create-subnet --vpc-id vpc-e026a5aa986b30b7a --cidr-block 10.0.2.0/24 --availability-zone us-west-2b --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=public-subnet-desafio4-2}]"
+
+{
+    "Subnet": {
+        "AvailabilityZoneId": "usw2-az1",
+        "OwnerId": "000000000000",
+        "AssignIpv6AddressOnCreation": false,
+        "Ipv6CidrBlockAssociationSet": [],
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "public-subnet-desafio4-2"
+            }
+        ],
+        "SubnetArn": "arn:aws:ec2:us-west-2:000000000000:subnet/subnet-6dc2ffdac6bbf1290",
+        "Ipv6Native": false,
+        "SubnetId": "subnet-6dc2ffdac6bbf1290",
+        "State": "available",
+        "VpcId": "vpc-e026a5aa986b30b7a",
+        "CidrBlock": "10.0.2.0/24",
+        "AvailableIpAddressCount": 251,
+        "AvailabilityZone": "us-west-2b",
+        "DefaultForAz": false,
+        "MapPublicIpOnLaunch": false
+    }
+}
+root@aws-sandbox:~# aws --endpoint-url=http://localhost:4566 ec2 associate-route-table --route-table-id rtb-5ebfc77e4206aa31a --subnet-id subnet-6dc2ffdac6bbf1290
+
+{
+    "AssociationId": "rtbassoc-26c21cb429f28320c"
+}
+root@aws-sandbox:~# aws --endpoint-url=http://localhost:4566 rds create-db-subnet-group --db-subnet-group-name tutorial-db-subnet-group --db-subnet-group-description "Desafio4 DB Subnet Group" --subnet-ids subnet-b9f20af0580909f9b subnet-6dc2ffdac6bbf1290 
+
+An error occurred (InternalFailure) when calling the CreateDBSubnetGroup operation: The API for service 'rds' is either not included in your current license plan or has not yet been emulated by LocalStack. Please refer to https://docs.localstack.cloud/references/coverage for more details.
+
