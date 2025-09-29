@@ -1,0 +1,416 @@
+Se genera usuario con permisos de Administrador, 'admin-desafio'.
+
+Validación de usuario y CLI
+------------------------------------------------
+
+root@aws-sandbox:~# aws --version
+aws-cli/2.31.3 Python/3.13.7 Linux/6.8.0-71-generic exe/x86_64.ubuntu.24
+root@aws-sandbox:~# aws sts get-caller-identity
+
+{
+    "UserId": "AIDAR5VCZ5QNWG7ESIFOK",
+    "Account": "132411681819",
+    "Arn": "arn:aws:iam::132411681819:user/admin-desafio"
+}
+
+Creamos la VPC
+------------------------------------------------
+
+root@aws-sandbox:~# aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications "ResourceType=vpc,Tags=[{Key=Name,Value=vpc-desafio4}]"
+
+{
+    "Vpc": {
+        "OwnerId": "132411681819",
+        "InstanceTenancy": "default",
+        "Ipv6CidrBlockAssociationSet": [],
+        "CidrBlockAssociationSet": [
+            {
+                "AssociationId": "vpc-cidr-assoc-0e5285e44511eca4f",
+                "CidrBlock": "10.0.0.0/16",
+                "CidrBlockState": {
+                    "State": "associated"
+                }
+            }
+        ],
+        "IsDefault": false,
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "vpc-desafio4"
+            }
+        ],
+        "VpcId": "vpc-056ae5c52f204736f",
+        "State": "pending",
+        "CidrBlock": "10.0.0.0/16",
+        "DhcpOptionsId": "dopt-08b45833d6205e8f1"
+    }
+}
+
+Creamos la Subnet 1
+------------------------------------------------
+
+root@aws-sandbox:~# aws ec2 create-subnet --vpc-id vpc-056ae5c52f204736f --cidr-block 10.0.1.0/24 --availability-zone us-east-1a --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=public-subnet-desafio4}]"
+{
+    "Subnet": {
+        "AvailabilityZoneId": "use1-az6",
+        "MapCustomerOwnedIpOnLaunch": false,
+        "OwnerId": "132411681819",
+        "AssignIpv6AddressOnCreation": false,
+        "Ipv6CidrBlockAssociationSet": [],
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "public-subnet-desafio4"
+            }
+        ],
+        "SubnetArn": "arn:aws:ec2:us-east-1:132411681819:subnet/subnet-03f956cb4aadcf476",
+        "EnableDns64": false,
+        "Ipv6Native": false,
+        "PrivateDnsNameOptionsOnLaunch": {
+            "HostnameType": "ip-name",
+            "EnableResourceNameDnsARecord": false,
+            "EnableResourceNameDnsAAAARecord": false
+        },
+        "SubnetId": "subnet-03f956cb4aadcf476",
+        "State": "available",
+        "VpcId": "vpc-056ae5c52f204736f",
+        "CidrBlock": "10.0.1.0/24",
+        "AvailableIpAddressCount": 251,
+        "AvailabilityZone": "us-east-1a",
+        "DefaultForAz": false,
+        "MapPublicIpOnLaunch": false
+    }
+}
+
+Creamos la Subnet 2
+------------------------------------------------
+
+root@aws-sandbox:~# aws ec2 create-subnet --vpc-id vpc-056ae5c52f204736f --cidr-block 10.0.2.0/24 --availability-zone us-east-1b --tag-specifications "ResourceType=subnet,Tags=[{Key=Name,Value=public-subnet-desafio4-2}]"
+
+{
+    "Subnet": {
+        "AvailabilityZoneId": "use1-az1",
+        "MapCustomerOwnedIpOnLaunch": false,
+        "OwnerId": "132411681819",
+        "AssignIpv6AddressOnCreation": false,
+        "Ipv6CidrBlockAssociationSet": [],
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "public-subnet-desafio4-2"
+            }
+        ],
+        "SubnetArn": "arn:aws:ec2:us-east-1:132411681819:subnet/subnet-0d75426e75cf5d269",
+        "EnableDns64": false,
+        "Ipv6Native": false,
+        "PrivateDnsNameOptionsOnLaunch": {
+            "HostnameType": "ip-name",
+            "EnableResourceNameDnsARecord": false,
+            "EnableResourceNameDnsAAAARecord": false
+        },
+        "SubnetId": "subnet-0d75426e75cf5d269",
+        "State": "available",
+        "VpcId": "vpc-056ae5c52f204736f",
+        "CidrBlock": "10.0.2.0/24",
+        "AvailableIpAddressCount": 251,
+        "AvailabilityZone": "us-east-1b",
+        "DefaultForAz": false,
+        "MapPublicIpOnLaunch": false
+    }
+}
+
+Creamos el internet gateway
+------------------------------------------------
+
+root@aws-sandbox:~# aws ec2 create-internet-gateway --tag-specifications "ResourceType=internet-gateway,Tags=[{Key=Name,Value=igw-desafio4}]"
+
+{
+    "InternetGateway": {
+        "Attachments": [],
+        "InternetGatewayId": "igw-0ebc11156b41e82ed",
+        "OwnerId": "132411681819",
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "igw-desafio4"
+            }
+        ]
+    }
+}
+
+Asociamos el IG a la VPC
+------------------------------------------------
+
+root@aws-sandbox:~# aws ec2 attach-internet-gateway --internet-gateway-id igw-0ebc11156b41e82ed --vpc-id vpc-056ae5c52f204736f
+
+Creamos el Routetable 
+------------------------------------------------
+
+root@aws-sandbox:~# aws ec2 create-route-table --vpc-id vpc-056ae5c52f204736f --tag-specifications "ResourceType=route-table,Tags=[{Key=Name,Value=rt-public-desafio4}]"
+
+{
+    "RouteTable": {
+        "Associations": [],
+        "PropagatingVgws": [],
+        "RouteTableId": "rtb-070109bf6462d3da9",
+        "Routes": [
+            {
+                "DestinationCidrBlock": "10.0.0.0/16",
+                "GatewayId": "local",
+                "Origin": "CreateRouteTable",
+                "State": "active"
+            }
+        ],
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "rt-public-desafio4"
+            }
+        ],
+        "VpcId": "vpc-056ae5c52f204736f",
+        "OwnerId": "132411681819"
+    },
+    "ClientToken": "57ec05c5-e850-408b-b35b-f8b7c2a6ebb2"
+}
+
+Agregamos una ruta por defecto 0.0.0.0/0 al rt 
+------------------------------------------------
+
+root@aws-sandbox:~# aws ec2 create-route --route-table-id rtb-070109bf6462d3da9 --destination-cidr-block 0.0.0.0/0 --gateway-id igw-0ebc11156b41e82ed
+
+{
+    "Return": true
+}
+
+Asociamos el RT a la subnet 1
+------------------------------------------------
+
+root@aws-sandbox:~# aws ec2 associate-route-table --route-table-id rtb-070109bf6462d3da9 --subnet-id subnet-03f956cb4aadcf476
+
+{
+    "AssociationId": "rtbassoc-0ee8cc0dfce680d5b",
+    "AssociationState": {
+        "State": "associated"
+    }
+}
+
+Asociamos el RT a la subnet 2
+------------------------------------------------
+
+root@aws-sandbox:~# aws ec2 associate-route-table --route-table-id rtb-070109bf6462d3da9 --subnet-id subnet-0d75426e75cf5d269
+
+{
+    "AssociationId": "rtbassoc-0833da3fe13d4578b",
+    "AssociationState": {
+        "State": "associated"
+    }
+}
+
+Creamos el SG desafio4-sg
+------------------------------------------------
+
+root@aws-sandbox:~# aws ec2 create-security-group --group-name desafio4-sg --description "Security Group para MariaDB" --vpc-id vpc-056ae5c52f204736f
+
+{
+    "GroupId": "sg-069f79e70cfc3961d",
+    "SecurityGroupArn": "arn:aws:ec2:us-east-1:132411681819:security-group/sg-069f79e70cfc3961d"
+}
+
+Agregamos una regla de ingress al SG que permite el trafico TCP entrante al puerto 3306(MySql)
+------------------------------------------------
+
+root@aws-sandbox:~# aws ec2 authorize-security-group-ingress --group-id sg-069f79e70cfc3961d --protocol tcp --port 3306 --cidr 0.0.0.0/0
+
+{
+    "Return": true,
+    "SecurityGroupRules": [
+        {
+            "SecurityGroupRuleId": "sgr-039c523da9748e5b1",
+            "GroupId": "sg-069f79e70cfc3961d",
+            "GroupOwnerId": "132411681819",
+            "IsEgress": false,
+            "IpProtocol": "tcp",
+            "FromPort": 3306,
+            "ToPort": 3306,
+            "CidrIpv4": "0.0.0.0/0",
+            "SecurityGroupRuleArn": "arn:aws:ec2:us-east-1:132411681819:security-group-rule/sgr-039c523da9748e5b1"
+        }
+    ]
+}
+
+Creamos un DB Subnet Group
+------------------------------------------------
+
+root@aws-sandbox:~# aws rds create-db-subnet-group --db-subnet-group-name desafio4-db-subnet-group --db-subnet-group-description "Desafio4 DB Subnet Group" --subnet-ids subnet-03f956cb4aadcf476 subnet-0d75426e75cf5d269
+
+{
+    "DBSubnetGroup": {
+        "DBSubnetGroupName": "desafio4-db-subnet-group",
+        "DBSubnetGroupDescription": "Desafio4 DB Subnet Group",
+        "VpcId": "vpc-056ae5c52f204736f",
+        "SubnetGroupStatus": "Complete",
+        "Subnets": [
+            {
+                "SubnetIdentifier": "subnet-0d75426e75cf5d269",
+                "SubnetAvailabilityZone": {
+                    "Name": "us-east-1b"
+                },
+                "SubnetOutpost": {},
+                "SubnetStatus": "Active"
+            },
+            {
+                "SubnetIdentifier": "subnet-03f956cb4aadcf476",
+                "SubnetAvailabilityZone": {
+                    "Name": "us-east-1a"
+                },
+                "SubnetOutpost": {},
+                "SubnetStatus": "Active"
+            }
+        ],
+        "DBSubnetGroupArn": "arn:aws:rds:us-east-1:132411681819:subgrp:desafio4-db-subnet-group",
+        "SupportedNetworkTypes": [
+            "IPV4"
+        ]
+    }
+}
+
+Intentamos crear la instancia de bd RDS sin exito porque los DNS's se encuentran deshabilitados
+------------------------------------------------
+
+root@aws-sandbox:~# aws rds create-db-instance --db-instance-identifier desafio4-db --db-instance-class db.t3.micro --engine mysql --master-username admin --master-user-password 123desafio4 --allocated-storage 20 --vpc-security-group-ids sg-069f79e70cfc3961d --db-subnet-group-name desafio4-db-subnet-group --publicly-accessible --no-multi-az 
+
+An error occurred (InvalidVPCNetworkStateFault) when calling the CreateDBInstance operation: Cannot create a publicly accessible DBInstance.  The specified VPC does not support DNS resolution, DNS hostnames, or both. Update the VPC and then try again
+
+Habilitamos DNS resolution
+------------------------------------------------
+root@aws-sandbox:~# aws ec2 modify-vpc-attribute --vpc-id vpc-056ae5c52f204736f --enable-dns-support
+
+Habilitamos DNS hostnames
+------------------------------------------------
+
+root@aws-sandbox:~# aws ec2 modify-vpc-attribute --vpc-id vpc-056ae5c52f204736f --enable-dns-hostnames
+
+Volvemos a crear el RDS
+------------------------------------------------
+
+root@aws-sandbox:~# aws rds create-db-instance --db-instance-identifier desafio4-db --db-instance-class db.t3.micro --engine mysql --master-username admin --master-user-password 123desafio4 --allocated-storage 20 --vpc-security-group-ids sg-069f79e70cfc3961d --db-subnet-group-name desafio4-db-subnet-group --publicly-accessible --no-multi-az 
+{
+    "DBInstances": [
+        {
+            "DBInstanceIdentifier": "desafio4-db",
+            "DBInstanceClass": "db.t3.micro",
+            "Engine": "mysql",
+            "DBInstanceStatus": "creating",
+            "MasterUsername": "admin",
+            "AllocatedStorage": 20,
+            "PreferredBackupWindow": "05:16-05:46",
+            "BackupRetentionPeriod": 1,
+            "DBSecurityGroups": [],
+            "VpcSecurityGroups": [
+                {
+                    "VpcSecurityGroupId": "sg-069f79e70cfc3961d",
+                    "Status": "active"
+                }
+            ],
+            "DBParameterGroups": [
+                {
+                    "DBParameterGroupName": "default.mysql8.0",
+                    "ParameterApplyStatus": "in-sync"
+                }
+            ],
+            "AvailabilityZone": "us-east-1a",
+            "DBSubnetGroup": {
+                "DBSubnetGroupName": "desafio4-db-subnet-group",
+                "DBSubnetGroupDescription": "Desafio4 DB Subnet Group",
+                "VpcId": "vpc-056ae5c52f204736f",
+                "SubnetGroupStatus": "Complete",
+                "Subnets": [
+                    {
+                        "SubnetIdentifier": "subnet-0d75426e75cf5d269",
+                        "SubnetAvailabilityZone": {
+                            "Name": "us-east-1b"
+                        },
+                        "SubnetOutpost": {},
+                        "SubnetStatus": "Active"
+                    },
+                    {
+                        "SubnetIdentifier": "subnet-03f956cb4aadcf476",
+                        "SubnetAvailabilityZone": {
+                            "Name": "us-east-1a"
+                        },
+                        "SubnetOutpost": {},
+                        "SubnetStatus": "Active"
+:
+
+Validamos su estado
+------------------------------------------------
+
+root@aws-sandbox:~# aws rds describe-db-instances --db-instance-identifier desafio4-db --query "DBInstances[0].DBInstanceStatus" --output text
+creating
+
+Validamos su estado
+------------------------------------------------
+
+root@aws-sandbox:~# aws rds describe-db-instances --db-instance-identifier desafio4-db --query "DBInstances[0].DBInstanceStatus" --output text
+backing-up
+
+
+Verificamos el endpoint para poder conectarnos a la db
+------------------------------------------------
+
+root@aws-sandbox:~# aws rds describe-db-instances --db-instance-identifier desafio4-db --query "DBInstances[0].Endpoint" --output json
+
+{
+    "Address": "desafio4-db.c2vccyqk80eo.us-east-1.rds.amazonaws.com",
+    "Port": 3306,
+    "HostedZoneId": "Z2R2ITUGPM61AM"
+}
+
+Nos conectamos a la db
+------------------------------------------------
+
+root@aws-sandbox:~# mysql -h desafio4-db.c2vccyqk80eo.us-east-1.rds.amazonaws.com -u admin -p
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 26
+Server version: 8.0.42 Source distribution
+
+Copyright (c) 2000, 2025, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Listamos las db
+------------------------------------------------
+
+mysql> SHOW DATABASES; +--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+
+Verificamos que la misma se encuentre funcionando, creando una nueva db y cargamos datos dentro de ella
+------------------------------------------------
+CREATE DATABASE desafio4;
+4 rows in set (0.19 sec)
+Query OK, 1 row affected (0.19 sec)
+
+mysql> USE desafio4; mysql> Database changed
+mysql>CREATE TABLE prueba (id INT PRIMARY KEY, nombre VARCHAR(50)); mysql> mysql> Query OK, 0 rows affected (0.20 sec)
+
+mysql>INSERT INTO prueba VALUES (1, 'Conexion OK'); mysql> mysql> Query OK, 1 row affected (0.18 sec)
+
+mysql>SELECT * FROM prueba; mysql>  +----+-------------+
+| id | nombre      |
++----+-------------+
+|  1 | Conexion OK |
++----+-------------+
+1 row in set (0.18 sec)
+
+mysql> mysql> 
+exit' at line 1
+mysql> Bye
